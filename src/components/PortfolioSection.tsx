@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Play, X, Download } from "lucide-react";
+import { Play, X, Download, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 
@@ -16,6 +16,9 @@ interface PortfolioItem {
 }
 
 const portfolioItems: PortfolioItem[] = [
+  // Short-Form (Reels)
+  { id: 1, title: "Reel 1", category: "reels", subcategory: "Social Media", duration: "0:30", videoUrl: "/videos/reel_0129.mp4" },
+
   // Long-Form (2 Real items)
   { id: 4, title: "Explainer Video 1", category: "longform", subcategory: "Documentary", duration: "12:30", videoUrl: "/videos/LongformVideo.mp4" },
   { id: 5, title: "Explainer Video 2", category: "longform", subcategory: "Sci-Fi Short Film", duration: "8:45", videoUrl: "/videos/LongformVideo2.mp4" },
@@ -33,7 +36,7 @@ const categories: { key: Category; label: string }[] = [
 
 export const PortfolioSection = () => {
   const [activeCategory, setActiveCategory] = useState<Category>("all");
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<PortfolioItem | null>(null);
 
   const filteredItems = activeCategory === "all"
     ? portfolioItems
@@ -74,7 +77,7 @@ export const PortfolioSection = () => {
               key={item.id}
               item={item}
               index={index}
-              onClick={() => setSelectedVideo(item.videoUrl || null)}
+              onClick={() => setSelectedVideo(item)}
             />
           ))}
         </div>
@@ -82,24 +85,38 @@ export const PortfolioSection = () => {
 
       {/* Video Modal */}
       <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
-        <DialogContent className="max-w-4xl p-0 bg-black border-none overflow-hidden aspect-video">
+        <DialogContent
+          className={`p-0 bg-black border-none overflow-hidden ${selectedVideo?.category === 'reels' ? 'max-w-md aspect-[9/16]' : 'max-w-4xl aspect-video'
+            }`}
+        >
           <DialogClose className="absolute top-4 right-4 z-50 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors">
             <X size={20} />
           </DialogClose>
-          {selectedVideo && (
+          {selectedVideo && selectedVideo.videoUrl && (
             <>
               <a
-                href={selectedVideo}
+                href={selectedVideo.videoUrl}
                 download
                 className="absolute top-4 right-16 z-50 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors"
                 title="Download Video"
               >
                 <Download size={20} />
               </a>
+              <a
+                href={selectedVideo.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-4 right-28 z-50 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors"
+                title="Open in New Tab"
+              >
+                <ExternalLink size={20} />
+              </a>
               <video
-                src={selectedVideo}
+                src={selectedVideo.videoUrl}
                 controls
                 autoPlay
+                playsInline
+                preload="metadata"
                 className="w-full h-full object-contain"
               />
             </>
@@ -112,6 +129,7 @@ export const PortfolioSection = () => {
 
 const PortfolioCard = ({ item, index, onClick }: { item: PortfolioItem; index: number; onClick: () => void }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const isReel = item.category === 'reels';
 
   const handleMouseEnter = () => {
     if (videoRef.current) {
@@ -130,14 +148,15 @@ const PortfolioCard = ({ item, index, onClick }: { item: PortfolioItem; index: n
 
   return (
     <div
-      className="group relative overflow-hidden rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-500 animate-fade-in cursor-pointer"
+      className={`group relative overflow-hidden rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-500 animate-fade-in cursor-pointer ${isReel ? 'row-span-2' : ''
+        }`}
       style={{ animationDelay: `${index * 0.1}s` }}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {/* Thumbnail / Video Preview */}
-      <div className="aspect-video overflow-hidden bg-black/10">
+      <div className={`overflow-hidden bg-black/10 ${isReel ? 'aspect-[9/16]' : 'aspect-video'}`}>
         <video
           ref={videoRef}
           src={item.videoUrl}
